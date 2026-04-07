@@ -1,0 +1,3 @@
+- O app.py ficará com as rotas
+- O HTML vai imprimir os resultados
+- É preciso definir variaveis para jogar as informações para HTML
