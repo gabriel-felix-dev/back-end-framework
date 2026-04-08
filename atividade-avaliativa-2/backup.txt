@@ -1,3 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call Of Nassau</title>
+</head>
+<body>
+    <h1>Call Of Nassau</h1>
+    <br>
+    <h2>Resultado das Melhor de 10 partidas:</h2>
+    <br>
+    <p>Você tem {{resultadoPontos}} pontos</p>
+    <br>
+    {% if (resultadoPontos >= 60) %}
+        <p>Você subiu de patente!</p>
+    {% elif (resultadoPontos >= 21) %}
+        <p>Você permanecerá na patente atual!</p>
+    {% else %}
+        <p>Você caiu de patente</p>
+    {% endif %}
+
+</body>
+</html>
+
+-----------------------------------------------------------------------------
+
 from flask import Flask, render_template
 
 app = Flask(__name__)
@@ -19,9 +46,9 @@ def inicio():
 
     pontosAcumulados = []
 
-    print('\n### Call Of Nassau ###')
+    print('### Call Of Nassau ###')
     print('\n### Registro da MD 10 de início de temporada ###')
-    print('\nDigite: \nV - Vitório \nE - Empate \nD - Derrota \nApós o preenchimento, acesso a página web http://127.0.0.1:5000 para verificar o resultado final')
+    print('\nDigite abaixo: \nV - Vitório \nE - Empate \nD - Derrota')
 
     for num in range(1,11,1):
         pergunta = input(f'\nDigite o resultado da {num}° partida: ')
@@ -46,3 +73,4 @@ def inicio():
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
+

@@ -11,7 +11,7 @@ def validacaoDeResposta(reposta):
     else:
         return reposta
 
-totalPontos = 0
+pontosAcumulados = []
 
 print('### Ranqueada Call os Nassau ###')
 print('\nDigite abaixo: \nV - Vitório \nE - Empate \nD - Derrota')
@@ -22,16 +22,18 @@ for num in range(1,11,1):
     resultadoValidacao = validacaoDeResposta(pergunta)
 
     if resultadoValidacao == 'V':
-        totalPontos += 10
+        pontosAcumulados.append(10)
         print('\nVocê ganhou 10 pontos')
 
     if resultadoValidacao == 'E':
-        totalPontos += 5
+        pontosAcumulados.append(5)
         print('\nVocê ganhou 5 pontos')
 
     if resultadoValidacao == 'D':
-        totalPontos -= 2
+        pontosAcumulados.append(-2)
         print('\nVocê perdeu 2 pontos')
+
+totalPontos = sum(pontosAcumulados)
 
 print(f'\nVocê tem {totalPontos} de pontos')
 
