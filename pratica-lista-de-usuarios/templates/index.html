@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Inicial</title>
+</head>
+
+<body>
+    <h1>Bem-vindo a tela inicial!</h1>
+
+    <p>Olá, {{nomeUsuario}}! Você tem {{idadeUsuario}} anos</p>
+
+    {% if (idadeUsuario >= 18) %}
+    <p>Você é maior de idade!</p>
+    <p>Você pode ter acesso ao seu perfil</p><br>
+    <a href="/usuario/{{nomeUsuario}}">Acessar perfil</a>
+    {% else %}
+    <p>Você é menor de idade!</p>
+    <p>Você não pode ter acesso ao seu perfil</p><br>
+    {% endif %}
+
+</body>
+
+</html>
