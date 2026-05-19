@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Cadastrar Produto</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,7 +21,8 @@
             display: inline-block;
         }
 
-        input, button {
+        input,
+        button {
             margin: 10px;
             padding: 10px;
             font-size: 16px;
@@ -44,7 +45,34 @@
 </head>
 
 <body>
-
+    <div class="container">
+        <h1>Cadastro Produto</h1>
+        <form action="/addprodutos" method="POST">
+            <input type="text" name="nomeproduto" id="nomeproduto" placeholder="Digite o nome do produto" required>
+            <button type="submit">Salvar</button>
+        </form>
+        <h2>Lista de Produtos</h2>
+        {% if produtos %}
+        <ul>
+            {% for produto in produtos %}
+            <li>
+                {{ produto }}
+                <form action="/updateprodutos" method="POST" style="display: inline;">
+                    <input type="hidden" name="nomeanterior" value="{{ produto }}">
+                    <input type="text" name="nomenovo" placeholder="Novo nome" required>
+                    <button type="submit">Atualizar</button>
+                </form>
+                <form action="/deleteprodutos" method="POST" style="display: inline;">
+                    <input type="hidden" name="nomeproduto" value="{{ produto }}">
+                    <button type="submit">Deletar</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Nenhum produto cadastrado...</p>
+        {% endif %}
+    </div>
 </body>
 
 </html>

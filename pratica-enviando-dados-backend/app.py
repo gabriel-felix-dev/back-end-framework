@@ -19,15 +19,16 @@ def addProduto():
 def updateProduto():
     nomeNovo = request.form['nomenovo']
     nomeAnterior = request.form['nomeanterior']
-    listaProdutos = [listaProdutos.index(nomeAnterior)] = nomeNovo
+    listaProdutos[listaProdutos.index(nomeAnterior)] = nomeNovo
 
     return redirect(url_for('index'))
 
-@app.route('/deletaprodutos', methods = ['POST'])
+@app.route('/deleteprodutos', methods = ['POST'])
 def deleteProduto():
-    return
-
-# TODO: Terminar a função deletar e finalizar a index
+    nomeDeletado = request.form['nomeproduto']
+    listaProdutos.remove(nomeDeletado)
+    
+    return redirect(url_for('index'))
 
 if __name__ == "__main__":
     app.run(debug= True)
