@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loja de Informática</title>
+    <style>
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td,
+        th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+    </style>
+</head>
+
+<body>
+    {% if resultadoConsulta %}
+    <h1>Loja de informática</h1>
+    <a href="/telacadastrarproduto"><button>Cadastrar Novo Produto</button></a>
+    <a href="/telaeditarproduto"><button>Editar Produto</button></a>
+    <a href="/telaexcluirproduto"><button>Excluir Produto</button></a>
+    <a href="/telapesquisarproduto"><button>Pesquisa de produto</button></a>
+    <a href="/"><button>Recarregar a página</button></a>
+
+    <br><br><br>
+
+    <table>
+        <caption>Lista de Produtos:</caption>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nome</th>
+                <th>Preço(R$)</th>
+                <th>Quantidade</th>
+                <th>Descrição</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for produto in resultadoConsulta %}
+            <tr>
+                <td>{{ produto[0] }}</td>
+                <td>{{ produto[1] }}</td>
+                <td>{{ produto[2] }}</td>
+                <td>{{ produto[3] }}</td>
+                <td>{{ produto[4] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if not resultadoConsulta %}
+    <h1>Loja de informática</h1>
+    <a href="/telacadastrarproduto"><button>Cadastrar Produto</button></a>
+
+    {% endif %}
+
+</body>
+
+</html>
