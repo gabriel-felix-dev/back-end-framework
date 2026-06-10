@@ -32,6 +32,7 @@ class _CadastraProfessorViewState extends State<CadastraProfessorView> {
           'senhaProfessor': _senhaController.text,
         }),
       );
+      if (!mounted) return;
       final dados = jsonDecode(response.body);
       final responseDados = dados['response'];
       ScaffoldMessenger.of(context).showSnackBar(
@@ -41,11 +42,12 @@ class _CadastraProfessorViewState extends State<CadastraProfessorView> {
         Navigator.pop(context);
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro de conexão: $e')),
       );
     } finally {
-      setState(() => _carregando = false);
+      if (mounted) setState(() => _carregando = false);
     }
   }
 

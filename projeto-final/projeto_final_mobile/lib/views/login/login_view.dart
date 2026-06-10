@@ -31,6 +31,7 @@ class _LoginViewState extends State<LoginView> {
           'senhaProfessor': _senhaController.text,
         }),
       );
+      if (!mounted) return;
       final dados = jsonDecode(response.body);
       final responseDados = dados['response'];
       if (responseDados['codigo'] == 200) {
@@ -44,9 +45,10 @@ class _LoginViewState extends State<LoginView> {
         _snack(responseDados['mensagem']);
       }
     } catch (e) {
+      if (!mounted) return;
       _snack('Erro de conexão: $e');
     } finally {
-      setState(() => _carregando = false);
+      if (mounted) setState(() => _carregando = false);
     }
   }
 
@@ -61,6 +63,7 @@ class _LoginViewState extends State<LoginView> {
           'senhaAluno': _senhaController.text,
         }),
       );
+      if (!mounted) return;
       final dados = jsonDecode(response.body);
       final responseDados = dados['response'];
       if (responseDados['codigo'] == 200) {
@@ -74,9 +77,10 @@ class _LoginViewState extends State<LoginView> {
         _snack(responseDados['mensagem']);
       }
     } catch (e) {
+      if (!mounted) return;
       _snack('Erro de conexão: $e');
     } finally {
-      setState(() => _carregando = false);
+      if (mounted) setState(() => _carregando = false);
     }
   }
 
@@ -94,12 +98,18 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Academia App')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+      body: SafeArea(
+        child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const Spacer(flex: 2),
+            const Text(
+              'Aqua Core',
+              style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Color(0xFF4166A0)),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
             TextField(
               controller: _emailController,
               decoration: const InputDecoration(
@@ -167,8 +177,10 @@ class _LoginViewState extends State<LoginView> {
                 child: const Text('Esqueci minha senha'),
               ),
             ],
+            const Spacer(flex: 1),
           ],
         ),
+      ),
       ),
     );
   }

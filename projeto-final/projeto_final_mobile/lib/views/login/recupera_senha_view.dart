@@ -23,6 +23,7 @@ class _RecuperaSenhaViewState extends State<RecuperaSenhaView> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'emailUsuario': _emailController.text}),
       );
+      if (!mounted) return;
       final dados = jsonDecode(response.body);
       final responseDados = dados['response'];
       ScaffoldMessenger.of(context).showSnackBar(
@@ -37,11 +38,12 @@ class _RecuperaSenhaViewState extends State<RecuperaSenhaView> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro de conexão: $e')),
       );
     } finally {
-      setState(() => _carregando = false);
+      if (mounted) setState(() => _carregando = false);
     }
   }
 

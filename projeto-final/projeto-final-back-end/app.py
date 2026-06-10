@@ -1,19 +1,28 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from flask_mail import Mail, Message
 import pymysql
 import random
 
 app = Flask(__name__)
+CORS(app)
+
+app.config['MAIL_SERVER']   = 'smtp.gmail.com'
+app.config['MAIL_PORT']     = 587
+app.config['MAIL_USE_TLS']  = True
+app.config['MAIL_USERNAME'] = 'felixg758@gmail.com'
+app.config['MAIL_PASSWORD'] = 'wuvk rqqj gatv pugg'
+mail = Mail(app)
 
 codigo_recuperacao_gerado = None
 
 def conectaDB():
     return pymysql.connect(
-        host='localhost',
+        host='127.0.0.1',
         port=3307,
         user='root',
         password='',
-        database='ProjetoJoseph'
+        database='projetojoseph'
     )
 
 # ========================
@@ -52,7 +61,7 @@ def loginProfessor():
 
     banco  = conectaDB()
     cursor = banco.cursor()
-    sql    = "SELECT Id, Nome, Email, Telefone FROM Professor WHERE Email = %s AND Senha = %s"
+    sql    = "SELECT Id, Nome, Email, Telefone, Cpf FROM Professor WHERE Email = %s AND Senha = %s"
     try:
         cursor.execute(sql, (email, senha))
         resultado = cursor.fetchone()
@@ -64,7 +73,8 @@ def loginProfessor():
                     "id": resultado[0],
                     "nome": resultado[1],
                     "email": resultado[2],
-                    "telefone": resultado[3]
+                    "telefone": resultado[3],
+                    "cpf": resultado[4]
                 }
             }}), 200
         else:
@@ -81,16 +91,46 @@ def atualizarProfessor():
     idProfessor = dados["idProfessor"]
     nome        = dados["nomeProfessor"]
     telefone    = dados["telefoneProfessor"]
+    email       = dados["emailProfessor"]
+    nova_senha  = dados.get("senhaProfessor", "")
 
     banco  = conectaDB()
     cursor = banco.cursor()
-    sql    = "UPDATE Professor SET Nome = %s, Telefone = %s WHERE Id = %s"
     try:
-        cursor.execute(sql, (nome, telefone, idProfessor))
+        if nova_senha:
+            sql = "UPDATE Professor SET Nome = %s, Telefone = %s, Email = %s, Senha = %s WHERE Id = %s"
+            cursor.execute(sql, (nome, telefone, email, nova_senha, idProfessor))
+        else:
+            sql = "UPDATE Professor SET Nome = %s, Telefone = %s, Email = %s WHERE Id = %s"
+            cursor.execute(sql, (nome, telefone, email, idProfessor))
         banco.commit()
         return jsonify({"response": {"mensagem": "Atualizado com sucesso", "codigo": 200}}), 200
+    except pymysql.err.IntegrityError:
+        return jsonify({"response": {"mensagem": "E-mail já cadastrado", "codigo": 400}}), 400
     except Exception as e:
         return jsonify({"response": {"mensagem": "Erro ao atualizar", "codigo": 400, "erro": str(e)}}), 400
+    finally:
+        banco.close()
+
+
+@app.route('/alterarSenhaProfessor', methods=['PUT'])
+def alterarSenhaProfessor():
+    dados       = request.get_json()
+    idProfessor = dados["idProfessor"]
+    senhaAtual  = dados["senhaAtual"]
+    novaSenha   = dados["novaSenha"]
+
+    banco  = conectaDB()
+    cursor = banco.cursor()
+    try:
+        cursor.execute("SELECT Id FROM Professor WHERE Id = %s AND Senha = %s", (idProfessor, senhaAtual))
+        if not cursor.fetchone():
+            return jsonify({"response": {"mensagem": "Senha atual incorreta", "codigo": 400}}), 400
+        cursor.execute("UPDATE Professor SET Senha = %s WHERE Id = %s", (novaSenha, idProfessor))
+        banco.commit()
+        return jsonify({"response": {"mensagem": "Senha alterada com sucesso", "codigo": 200}}), 200
+    except Exception as e:
+        return jsonify({"response": {"mensagem": "Erro ao alterar senha", "codigo": 400, "erro": str(e)}}), 400
     finally:
         banco.close()
 
@@ -102,11 +142,13 @@ def deletarProfessor():
 
     banco  = conectaDB()
     cursor = banco.cursor()
-    sql    = "DELETE FROM Professor WHERE Id = %s"
     try:
-        cursor.execute(sql, (idProfessor,))
+        cursor.execute("SELECT COUNT(*) FROM Treino WHERE IdProfessor = %s", (idProfessor,))
+        if cursor.fetchone()[0] > 0:
+            return jsonify({"response": {"mensagem": "Você é responsável por treinos cadastrados e não pode ser excluído.", "codigo": 400}}), 400
+        cursor.execute("DELETE FROM Professor WHERE Id = %s", (idProfessor,))
         banco.commit()
-        return jsonify({"response": {"mensagem": "Deletado com sucesso", "codigo": 200}}), 200
+        return jsonify({"response": {"mensagem": "Conta excluída com sucesso", "codigo": 200}}), 200
     except Exception as e:
         return jsonify({"response": {"mensagem": "Erro ao deletar", "codigo": 400, "erro": str(e)}}), 400
     finally:
@@ -150,7 +192,7 @@ def loginAluno():
 
     banco  = conectaDB()
     cursor = banco.cursor()
-    sql    = "SELECT Id, Nome, Email, Telefone FROM Aluno WHERE Email = %s AND Senha = %s"
+    sql    = "SELECT Id, Nome, Email, Telefone, Cpf FROM Aluno WHERE Email = %s AND Senha = %s"
     try:
         cursor.execute(sql, (email, senha))
         resultado = cursor.fetchone()
@@ -162,7 +204,8 @@ def loginAluno():
                     "id": resultado[0],
                     "nome": resultado[1],
                     "email": resultado[2],
-                    "telefone": resultado[3]
+                    "telefone": resultado[3],
+                    "cpf": resultado[4]
                 }
             }}), 200
         else:
@@ -175,20 +218,51 @@ def loginAluno():
 
 @app.route('/atualizarAluno', methods=['PUT'])
 def atualizarAluno():
-    dados    = request.get_json()
-    idAluno  = dados["idAluno"]
-    nome     = dados["nomeAluno"]
-    telefone = dados["telefoneAluno"]
+    dados      = request.get_json()
+    idAluno    = dados["idAluno"]
+    nome       = dados["nomeAluno"]
+    telefone   = dados["telefoneAluno"]
+    email      = dados["emailAluno"]
+    idPlano    = dados["idPlanoFK"]
+    nova_senha = dados.get("senhaAluno", "")
 
     banco  = conectaDB()
     cursor = banco.cursor()
-    sql    = "UPDATE Aluno SET Nome = %s, Telefone = %s WHERE Id = %s"
     try:
-        cursor.execute(sql, (nome, telefone, idAluno))
+        if nova_senha:
+            sql = "UPDATE Aluno SET Nome = %s, Telefone = %s, Email = %s, Senha = %s, IdPlano = %s WHERE Id = %s"
+            cursor.execute(sql, (nome, telefone, email, nova_senha, idPlano, idAluno))
+        else:
+            sql = "UPDATE Aluno SET Nome = %s, Telefone = %s, Email = %s, IdPlano = %s WHERE Id = %s"
+            cursor.execute(sql, (nome, telefone, email, idPlano, idAluno))
         banco.commit()
         return jsonify({"response": {"mensagem": "Atualizado com sucesso", "codigo": 200}}), 200
+    except pymysql.err.IntegrityError:
+        return jsonify({"response": {"mensagem": "E-mail já cadastrado", "codigo": 400}}), 400
     except Exception as e:
         return jsonify({"response": {"mensagem": "Erro ao atualizar", "codigo": 400, "erro": str(e)}}), 400
+    finally:
+        banco.close()
+
+
+@app.route('/alterarSenhaAluno', methods=['PUT'])
+def alterarSenhaAluno():
+    dados     = request.get_json()
+    idAluno   = dados["idAluno"]
+    senhaAtual = dados["senhaAtual"]
+    novaSenha = dados["novaSenha"]
+
+    banco  = conectaDB()
+    cursor = banco.cursor()
+    try:
+        cursor.execute("SELECT Id FROM Aluno WHERE Id = %s AND Senha = %s", (idAluno, senhaAtual))
+        if not cursor.fetchone():
+            return jsonify({"response": {"mensagem": "Senha atual incorreta", "codigo": 400}}), 400
+        cursor.execute("UPDATE Aluno SET Senha = %s WHERE Id = %s", (novaSenha, idAluno))
+        banco.commit()
+        return jsonify({"response": {"mensagem": "Senha alterada com sucesso", "codigo": 200}}), 200
+    except Exception as e:
+        return jsonify({"response": {"mensagem": "Erro ao alterar senha", "codigo": 400, "erro": str(e)}}), 400
     finally:
         banco.close()
 
@@ -200,11 +274,13 @@ def deletarAluno():
 
     banco  = conectaDB()
     cursor = banco.cursor()
-    sql    = "DELETE FROM Aluno WHERE Id = %s"
     try:
-        cursor.execute(sql, (idAluno,))
+        cursor.execute("SELECT COUNT(*) FROM Treino WHERE IdAluno = %s", (idAluno,))
+        if cursor.fetchone()[0] > 0:
+            return jsonify({"response": {"mensagem": "Você possui treinos vinculados à sua conta e não pode ser excluído.", "codigo": 400}}), 400
+        cursor.execute("DELETE FROM Aluno WHERE Id = %s", (idAluno,))
         banco.commit()
-        return jsonify({"response": {"mensagem": "Deletado com sucesso", "codigo": 200}}), 200
+        return jsonify({"response": {"mensagem": "Conta excluída com sucesso", "codigo": 200}}), 200
     except Exception as e:
         return jsonify({"response": {"mensagem": "Erro ao deletar", "codigo": 400, "erro": str(e)}}), 400
     finally:
@@ -237,15 +313,8 @@ def recuperaSenha():
         return jsonify({"response": {"mensagem": "E-mail não encontrado", "codigo": 404}}), 404
 
     try:
-        app.config['MAIL_SERVER']   = 'smtp.gmail.com'
-        app.config['MAIL_PORT']     = 587
-        app.config['MAIL_USE_TLS']  = True
-        app.config['MAIL_USERNAME'] = 'seu_email@gmail.com'
-        app.config['MAIL_PASSWORD'] = 'sua_senha_app'
-        mail = Mail(app)
-
         codigo_recuperacao_gerado = random.randint(100000, 999999)
-        msg      = Message("Recuperação de Senha", sender="seu_email@gmail.com", recipients=[email])
+        msg      = Message("Recuperação de Senha", sender=app.config['MAIL_USERNAME'], recipients=[email])
         msg.body = f"Seu código de recuperação é: {codigo_recuperacao_gerado}"
         mail.send(msg)
 
@@ -263,7 +332,7 @@ def atualizaSenha():
     novaSenha      = dados["novaSenha"]
     codigoRecebido = dados["codigoRecuperacao"]
 
-    if codigoRecebido != codigo_recuperacao_gerado:
+    if int(codigoRecebido) != codigo_recuperacao_gerado:
         return jsonify({"response": {"mensagem": "Código de recuperação inválido", "codigo": 400}}), 400
 
     banco  = conectaDB()
@@ -273,6 +342,7 @@ def atualizaSenha():
         if cursor.rowcount == 0:
             cursor.execute("UPDATE Aluno SET Senha = %s WHERE Email = %s", (novaSenha, email))
         banco.commit()
+        codigo_recuperacao_gerado = None
         return jsonify({"response": {"mensagem": "Senha atualizada com sucesso", "codigo": 200}}), 200
     except Exception as e:
         return jsonify({"response": {"mensagem": "Erro ao atualizar senha", "codigo": 400, "erro": str(e)}}), 400
@@ -312,7 +382,12 @@ def lerTreinosProfessor(idProfessor):
 def lerTreinosAluno(idAluno):
     banco  = conectaDB()
     cursor = banco.cursor()
-    sql    = "SELECT Id, IdAluno, IdProfessor, Titulo, Descricao FROM Treino WHERE IdAluno = %s"
+    sql    = """
+        SELECT t.Id, t.IdAluno, t.IdProfessor, t.Titulo, t.Descricao, p.Nome
+        FROM Treino t
+        JOIN Professor p ON t.IdProfessor = p.Id
+        WHERE t.IdAluno = %s
+    """
     try:
         cursor.execute(sql, (idAluno,))
         rows = cursor.fetchall()
@@ -323,11 +398,35 @@ def lerTreinosAluno(idAluno):
                 "idAluno": r[1],
                 "idProfessor": r[2],
                 "titulo": r[3],
-                "descricao": r[4]
+                "descricao": r[4],
+                "nomeProfessor": r[5]
             })
         return jsonify([listaTreinos]), 200
     except Exception as e:
         return jsonify({"response": {"mensagem": "Erro ao buscar treinos", "codigo": 400, "erro": str(e)}}), 400
+    finally:
+        banco.close()
+
+
+@app.route('/lerAlunos', methods=['GET'])
+def lerAlunos():
+    banco  = conectaDB()
+    cursor = banco.cursor()
+    sql    = "SELECT Id, Nome, Email, Telefone FROM Aluno"
+    try:
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        listaAlunos = []
+        for r in rows:
+            listaAlunos.append({
+                "id":       r[0],
+                "nome":     r[1],
+                "email":    r[2],
+                "telefone": r[3]
+            })
+        return jsonify([listaAlunos]), 200
+    except Exception as e:
+        return jsonify({"response": {"mensagem": "Erro ao buscar alunos", "codigo": 400, "erro": str(e)}}), 400
     finally:
         banco.close()
 
@@ -395,4 +494,4 @@ def deletarTreino():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(port=5000, debug=True)

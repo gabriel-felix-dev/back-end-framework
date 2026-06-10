@@ -41,6 +41,7 @@ class _CadastraAlunoViewState extends State<CadastraAlunoView> {
           'idPlanoFK': _idPlanoSelecionado,
         }),
       );
+      if (!mounted) return;
       final dados = jsonDecode(response.body);
       final responseDados = dados['response'];
       ScaffoldMessenger.of(context).showSnackBar(
@@ -50,11 +51,12 @@ class _CadastraAlunoViewState extends State<CadastraAlunoView> {
         Navigator.pop(context);
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro de conexão: $e')),
       );
     } finally {
-      setState(() => _carregando = false);
+      if (mounted) setState(() => _carregando = false);
     }
   }
 
@@ -106,7 +108,7 @@ class _CadastraAlunoViewState extends State<CadastraAlunoView> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
-              value: _idPlanoSelecionado,
+              initialValue: _idPlanoSelecionado,
               decoration: const InputDecoration(labelText: 'Plano', border: OutlineInputBorder()),
               items: _planos.map((plano) {
                 return DropdownMenuItem<int>(

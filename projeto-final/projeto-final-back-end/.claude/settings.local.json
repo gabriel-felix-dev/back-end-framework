@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "PowerShell(pip show flask-mail 2>$null)",
+      "PowerShell(if \\(-not $?\\) { \"Flask-Mail N�O instalado\" })",
+      "PowerShell(pip install flask-mail)",
+      "PowerShell(pip show flask-cors 2>$null)",
+      "PowerShell(if \\(-not $?\\) { \"Flask-Cors N�O instalado\" })"
     ]
   }
 }
